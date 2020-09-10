@@ -3,13 +3,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import style
 style.use('fivethirtyeight')
-import numpy
+import numpy as np
+import time
 
 conn = sqlite3.connect('BTC.db')
 cur = conn.cursor()
 count = 0
 id_wiersza = 0
-hl, = plt.plot([], [])
+fig, ax = plt.subplots(1, 1, figsize=(6,4))
+act_czas = []
+act_kurs = []
 while True:
     if count == 0 and id_wiersza == 0:
         cur.execute('''SELECT * FROM Kursy''')
@@ -22,20 +25,38 @@ while True:
         ticks = df[0].tolist()
         dane_kurs = df[1].tolist()
         dane_czas = df[2].tolist()
-        hl.set_xdata(numpy.append(hl.get_xdata(), ticks))
-        hl.set_ydata(numpy.append(hl.get_ydata(), dane_kurs))
-        plt.xticks(ticks, dane_czas, rotation='vertical')
-        plt.tight_layout()
+        ax.plot(dane_czas, dane_kurs)
+        ax.aspect = 'auto'
+        plt.pause(0.0001)
+        print("T")
         plt.show()
         plt.draw()
+        print("TE")
+        act_czas = np.append(act_czas, dane_czas)
+        act_kurs = np.append(act_kurs, dane_kurs)
+
 
     else:
+        time.sleep(1)
+        plt.pause(0.0001)
         cur.execute('''SELECT * FROM Kursy WHERE rowid > ''' + str(id_wiersza))
         dane = cur.fetchall() #nowe dane
+        df = pd.DataFrame(dane)
+        df_c = df[2].tolist()
+        df_k = df[1].tolist()
         id_wiersza = id_wiersza + len(dane) #zaktualizowanie id_wiersza o nowe dane
-
+        acc = np.append(act_czas, df_c)
+        ack = np.append(act_kurs, df_k)
+        ax.plot(acc, ack)
+        ax.aspect = 'auto'
+        print("T", acc, ack)
+        #plt.show()
+        plt.draw()
+        print("TE")
+        act_czas = acc
+        act_kurs = ack
         print("z pętli else: ", id_wiersza)
-        continue
+
 
 
 
